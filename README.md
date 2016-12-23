@@ -13,6 +13,9 @@ Pygame Tutorial
 FaceAPI  
 [Offical site](https://www.microsoft.com/cognitive-services/en-us/face-api/documentation/get-started-with-face-api/GettingStartedwithFaceAPIinPython)  
 
+Project Flow-Chart 
+[Flow](https://drive.google.com/open?id=0BwT2ANLIx93qVzJUUHNzLV8yUzA)
+
 ##usgae 
 These files can be executed individiual in src  
 src/ageDetection.py - return age of humans at image.  
