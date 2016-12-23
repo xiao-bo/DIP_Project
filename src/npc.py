@@ -1,55 +1,63 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import pygame
 from pygame.locals import *
- 
+from pgu import gui
 class NPC:
     def __init__(self):
-        self._running = True
+        ### initial value
+        self.running = True
         self.screen = None
         self.size = self.width, self.height = 840, 600
         self.background=255,255,255
-
+        self.hello=None
+        self.text="hello"
 
     def on_init(self):
         pygame.init()
         self.screen = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self._running = True
+        self.running = True
 
         ## load npc
         self.npc_minion = pygame.image.load("../pic/npc_minion.jpeg")
         self.npc_minion_rect = self.npc_minion.get_rect()
-        self.speed=[2,0]
         self.npc_minion_rect.x=500
         self.npc_minion_rect.y=200
-        #self.npc_minion_rect.size=
+
+        ##
+        font = pygame.font.SysFont(None, 80)
+        self.hello = font.render(self.text, False, (0,0,0))
+        pygame.display.set_caption("WindowTitle")
     def on_event(self, event):
 
         if event.type == pygame.QUIT:
-            self._running = False
+            self.running = False
+        elif event.type==pygame.MOUSEBUTTONUP:
+            self.text="goodbye"
+        elif event.type==pygame.MOUSEBUTTONDOWN:
+            self.text="hello"
 
     def on_loop(self):
-        '''
-        self.npc_minion_rect = self.npc_minion_rect.move(self.speed)
-        if self.npc_minion_rect.left < 0 or self.npc_minion_rect.right > self.width:
-            self.speed[0] = -self.speed[0]
-        if self.npc_minion_rect.top < 0 or self.npc_minion_rect.bottom > self.height:
-            self.speed[1] = -self.speed[1]
-        '''
-        #pass
+        font = pygame.font.SysFont(None, 80)
+        self.hello = font.render(self.text, False, (0,0,0))
+        pass
 
     def on_render(self):
         self.screen.fill(self.background)
         self.screen.blit(self.npc_minion, self.npc_minion_rect)
+        self.screen.blit(self.hello, (20,300))
         pygame.display.flip()
-        #pass
+        
 
     def on_cleanup(self):
         pygame.quit()
  
     def on_execute(self):
         if self.on_init() == False:
-            self._running = False
+            self.running = False
  
-        while( self._running ):
+        while( self.running ):
             for event in pygame.event.get():
                 self.on_event(event)
             self.on_loop()
