@@ -40,14 +40,14 @@ git commit -m 'your commit'
 ```
 and pull again. 
 
-Then you will encounter merge conflict, you have to edit error file 
+Then you may encounter merge conflict, you have to edit error file 
 and find conflict part.  
 
 Merge it and commit again.
 ```
 git commit -m 'merge'
 ```
-You can push it to remote master
+Now you can push it to remote master.
 
 ```
 git push origin master
