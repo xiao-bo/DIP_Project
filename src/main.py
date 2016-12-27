@@ -3,11 +3,11 @@
 
 import pygame
 from pygame.locals import *
-from pgu import gui
 
 ### import other class in src
 from npc import NPC
 from dialog import Dialog
+
 
 
 
@@ -40,7 +40,6 @@ class EnterPoint:
 
         ## init dialog font 
         self.font = pygame.font.SysFont(None, 80)
-       
 
     def on_event(self, event):
         dialog = Dialog()
@@ -70,23 +69,28 @@ class EnterPoint:
             	##
             	self.index = 0
 
-            self.text = dialog.load(self.index)
-            self.hello = self.font.render(self.text, False, (0,0,0))
+        self.text = dialog.load(self.index)
+        self.dialog = self.font.render(self.text, False, (0,0,0))
 
     def on_loop(self):
     	## FaceDetect put it.
         
-
         pass
 
     def on_render(self):
+        ## fill background color
         self.screen.fill(self.background)
+
+        ## render npc
         self.screen.blit(self.npcMinion, self.npcMinion_rect)
-        self.screen.blit(self.hello, (20,300))
+
+        ##render dialog
+        self.screen.blit(self.dialog, (20,300))
         pygame.display.flip()
         
 
     def on_cleanup(self):
+        
         pygame.quit()
 
  
@@ -104,4 +108,3 @@ if __name__ == "__main__" :
         Enter.on_render()
     Enter.on_cleanup()
 
-    #theStart.on_execute()
