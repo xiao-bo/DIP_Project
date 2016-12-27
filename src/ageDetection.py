@@ -4,6 +4,6 @@ KEY = 'f36fd7a2c5a84e0ea61fa81a80aed7d8'  # Replace with a valid Subscription Ke
 CF.Key.set(KEY)
 
 #img_url = 'https://raw.githubusercontent.com/Microsoft/Cognitive-Face-Windows/master/Data/detection1.jpg'
-img_url="../pic/self.jpge"
+img_url="../pic/self.jpg"
 result = CF.face.detect(img_url,False,False,'age,smile,gender')
 print result
