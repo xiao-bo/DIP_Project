@@ -8,11 +8,11 @@ from pgu import gui
 
 
 class NPC:
-    def __init__(self,filename):
+    def __init__(self,filename,x,y):
         ### initial value
         self.filename=filename
-        self.positionX=500
-        self.positionY=200
+        self.positionX=x
+        self.positionY=y
         
     def load(self):
         npc = pygame.image.load(self.filename)
