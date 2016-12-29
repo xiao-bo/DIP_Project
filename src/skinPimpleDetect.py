@@ -30,14 +30,26 @@ while True:
         minNeighbors=5,
         minSize=(30, 30),
     )
-    
     # Draw a rectangle around the faces
     for (x, y, w, h) in faces:
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        
+    #print(converted.shape)
+        for b in range(x, x+w):
+            #print("b", b)
+            for a in range(y, y+h):
+                #print("a",a)
+                roi = converted[y:(y+10), x:(x+10)]
+                color0 = np.mean(roi[0])
+                color1 = np.mean(roi[1])
+                color2 = np.mean(roi[2])
+                #print("color shape", color0)
+                if color0<10 and color1>70 and color2>50: #converted[a,b,0]< 10 and converted[a,b,1] > 70 and converted[a,b,2] > 50:
+                    cv2.rectangle(frame, (b, a), (b+10, a+10), (0, 255, 255), 2)
+            
     # Display the resulting frame
     
     cv2.imshow('Video', np.hstack([frame, skin]))
+    
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
