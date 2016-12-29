@@ -15,6 +15,8 @@ import numpy as np
 from npc import NPC
 from dialog import Dialog
 
+cascPath = "../db/haarcascade_frontalface_default.xml"        
+
 
 class EnterPoint:
     def __init__(self):
@@ -49,7 +51,7 @@ class EnterPoint:
         self.video_capture = cv2.VideoCapture(0)
 
         ##camera position (x,y)
-        self.video_capture.set(3,640)
+        self.video_capture.set(3,840)
         self.video_capture.set(4,480)
         
 
@@ -93,21 +95,43 @@ class EnterPoint:
         #### camera part ####
         ## camera takes frame 
         ret, frame = self.video_capture.read()
+        
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        ## load face model
+        faceCascade = cv2.CascadeClassifier(cascPath)
+
+        ## detect person face
+        faces = faceCascade.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(30, 30),
+            flags=cv2.CASCADE_SCALE_IMAGE
+        )
+        ## draw rectangle
+        for (x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
         ## frame color into normal mode 
         frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
 
         ## turn frame into right angle 
         frame=np.rot90(frame)
-
+        
         ## turn frame(nd.array) into surface            
         self.frame = pygame.surfarray.make_surface(frame)
+        
+
+
         
     def on_render(self):
         
        
         ## render frame on screen 
         self.screen.blit(self.frame,(0,0))
+
+
         self.screen.blit(self.npcMinion, self.npcMinion_rect)
         self.screen.blit(self.dialog, (20,300))
         pygame.display.flip()
@@ -115,6 +139,7 @@ class EnterPoint:
 
     def on_cleanup(self):
         pygame.quit()
+        self.video_capture.release()
         cv2.destroyAllWindows()
         
  

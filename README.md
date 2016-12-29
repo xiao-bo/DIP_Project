@@ -22,9 +22,9 @@ src/ageDetection.py - return age of humans at image.
 src/faceDetection.py - detect humans face in camera. 
 
 These class file can be call by main.py.(npc.py and dialog.py) 
-I hope build good model for main.py .
-src/npc.py - simple npc class
-src/dialog.py - simple dialog class
+I hope build good model for main.py.  
+src/npc.py - simple npc class  
+src/dialog.py - simple dialog class  
 src/main.py - main of game. now can run npc class and dialog class
 
 
