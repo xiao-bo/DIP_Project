@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-## pygame part 
+
 import pygame
 
-## opencv 2
-import cognitive_face as CF
-import cv2
-
-## python build-in library
 import numpy as np
 from threading import Thread
 ## import our class in src
@@ -16,12 +11,17 @@ from npc import NPC
 from dialog import Dialog
 from ageDetection import getAge
 
+
+import sys
+import cognitive_face as CF
+import cv2
+
+ 
 cascPath = "../db/haarcascade_frontalface_default.xml"        
 KEY = 'f36fd7a2c5a84e0ea61fa81a80aed7d8'  # Replace with a valid Subscription Key here.
 CF.Key.set(KEY)
 
-#img_url = 'https://raw.githubusercontent.com/Microsoft/Cognitive-Face-Windows/master/Data/detection1.jpg'
-img_url="../pic/self.jpg"
+
 
 
 class EnterPoint:
@@ -35,7 +35,11 @@ class EnterPoint:
 
         ## dialog index
         self.index = 0
-        self.flag=False
+
+        #detect face by passing person
+        self.count = 0
+        self.result = None
+        self.somebody = False
         
     def on_init(self):
         ## game initail process
@@ -45,30 +49,33 @@ class EnterPoint:
         ## window title
         pygame.display.set_caption("WindowTitle")
 
+        
         ## load minon NPC
         ## 500,200 represent position x,y
-        npcMinion = NPC("../pic/npc_minion.jpeg",500,400)
+        npcMinion = NPC("../pic/npc_minion.jpeg",450,100)
         self.npcMinion,self.npcMinion_rect=npcMinion.load()
+        
 
         ## init dialog font 
-        self.font = pygame.font.SysFont(None, 80)
+        self.font = pygame.font.SysFont(None, 50)
 
-        ##camera init
+        #camera init
         self.video_capture = cv2.VideoCapture(0)
-
-        ##camera position (x,y)
+        #camera windows size
+        
         self.video_capture.set(3,840)
         self.video_capture.set(4,480)
+        
         
 
     def on_event(self, event):
         dialog = Dialog()
-        text = dialog.load(self.index)
+        self.text = dialog.load(self.index)
 
         if event.type == pygame.QUIT:
             self.running = False
 
-        #### dialog part ####   
+        ## dialog part     
         ## detect keydown 
         elif event.type == pygame.KEYDOWN:
             ## if key is right
@@ -95,20 +102,20 @@ class EnterPoint:
 
 
         ##change text content
-        text = dialog.load(self.index)
+        self.text = dialog.load(self.index)
         ## change text font and color
-        self.dialog = self.font.render(text, False, (255,255,255))
+        self.dialog = self.font.render(self.text, False, (255,0,0))
 
     def on_loop(self):
 
-        #### camera part ####
+        ## camera part 
         ## camera takes frame 
-        ret, frame = self.video_capture.read()
+        ret, self.frame = self.video_capture.read()
         
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
+        
         ## load face model
         faceCascade = cv2.CascadeClassifier(cascPath)
+        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
         ## detect person face
         faces = faceCascade.detectMultiScale(
@@ -121,45 +128,55 @@ class EnterPoint:
         
         ## draw rectangle
         
-        for (x, y, w, h) in faces:
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            
-        t=Thread(target=getAge(frame))
-        t.start()
+        #for (x, y, w, h) in faces:
+        #    cv2.rectangle(self.frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        
+        ## detect person age by thread
+        #t=Thread(target=getAge(frame))
+        #t.start()
         #result=getAge(frame)
         #print result
         
+ 
+       	#determine person age by count
+        if len(faces)>0:
+            cv2.imwrite('frame.jpg', self.frame)
+            self.count = self.count + 1
+            self.somebody = True
+            if self.count == 1:
+                img_url="frame.jpg"
+                result = CF.face.detect(img_url,False,False,'age,smile,gender')
+                print result
+
+        else:
+            self.somebody = False
+            self.count = 0	
+ 		  
         ## frame color into normal mode 
-        frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+        self.frame=cv2.cvtColor(self.frame,cv2.COLOR_BGR2RGB)
 
 
         ## turn frame into right angle 
-        frame=np.rot90(frame)
+        self.frame=np.rot90(self.frame)
 
         ## turn frame(nd.array) into surface            
-        self.frame = pygame.surfarray.make_surface(frame)
-        
-
-
-    
+        self.frame = pygame.surfarray.make_surface(self.frame)
+       
     def on_render(self):
         
-       
         ## render frame on screen 
         self.screen.blit(self.frame,(0,0))
-
-
-        if (self.flag):
-            self.screen.blit(self.npcMinion, self.npcMinion_rect)
+        if self.somebody == True:
+            self.bg = self.screen.blit(self.npcMinion, self.npcMinion_rect)
+            self.screen.blit(self.dialog, (20,50))
         else:
             pass
-        self.screen.blit(self.dialog, (20,480))
-        pygame.display.flip()
+        pygame.display.update()
+        
         
 
     def on_cleanup(self):
         pygame.quit()
-        self.video_capture.release()
         cv2.destroyAllWindows()
         
  
@@ -170,12 +187,9 @@ if __name__ == "__main__" :
     if Enter.on_init() == False:
         Enter.running = False
 
-    ### game loop
     while( Enter.running ):
-        ## event callback
         for event in pygame.event.get():
             Enter.on_event(event)
-
         Enter.on_loop()
         Enter.on_render()
     Enter.on_cleanup()
