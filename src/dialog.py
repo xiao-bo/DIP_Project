@@ -1,4 +1,5 @@
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 dialogContent=[
 "hello welcome to XX, please smile",\
