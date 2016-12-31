@@ -16,7 +16,7 @@ import sys
 import cognitive_face as CF
 import cv2
 import json
-
+from hollow import textHollow,textOutline
 
 ## faceAPI variable 
 cascPath = "../db/haarcascade_frontalface_default.xml"        
@@ -68,13 +68,17 @@ class EnterPoint:
 
         ## dialog index
         self.index = 0
+        self.order = True
+        self.flag = False
 
         #detect face by passing person
         self.count = 0
         self.result = None
         self.somebody = False
 
-        
+        #map and partner
+        self.tour = False
+        self.hole = False
         
         
     def on_init(self):
@@ -86,12 +90,15 @@ class EnterPoint:
         pygame.display.set_caption("WindowTitle")
 
         
-        ## load minon NPC
+        ## load male and female NPC
         ## 500,200 represent position x,y
-        npcMinion = NPC("../pic/fire.png",450,100)
+        npcMinion = NPC("../pic/fire.png",650,30)
         self.npcMinion,self.npcMinion_rect=npcMinion.load()
-        npcCat = NPC("../pic/jani.png",450,100)
+        npcCat = NPC("../pic/jani.png",600,30)
         self.npcCat,self.npcCat_rect=npcCat.load()
+        ## load map and partner
+        self.partner =pygame.image.load("../pic/partner.png")
+        self.map =pygame.image.load("../pic/map.png")
         ## init dialog font 
         self.font = pygame.font.SysFont(None, 50)
 
@@ -100,14 +107,16 @@ class EnterPoint:
         #camera windows size
         
         self.video_capture.set(3,840)
-        self.video_capture.set(4,480)
+        self.video_capture.set(4,600)
         
         
 
     def on_event(self, event):
-        dialog = Dialog()
-        self.text = dialog.load(self.index)
+        if event.type == pygame.QUIT:
+            self.running = False
 
+        ## dialog part     
+        ## detect keydown 
         if event.type == pygame.QUIT:
             self.running = False
 
@@ -115,33 +124,53 @@ class EnterPoint:
         ## detect keydown 
         elif event.type == pygame.KEYDOWN:
             ## if key is right
-            if event.key == pygame.K_RIGHT: 
+            if event.key == pygame.K_RIGHT and self.order == True: 
                 ## change dialog
-                self.index = (self.index+1)%5 
-            elif event.key == pygame.K_LEFT:
-                self.index = (self.index-1)%5
-
-            ## simulate person is leaving state.    
-            elif event.key == pygame.K_BACKSPACE: 
-                ## text is "goodbye"
-                self.index = 6  
+                self.index = (self.index+1)%3
+            elif event.key == pygame.K_LEFT and self.order == True:
+                self.index = (self.index-1)%3
+            #open the ntu tour     
+            elif event.key == pygame.K_y:
+                self.index = 3
+                self.order = False
+                self.tour = True
+            elif event.key == pygame.K_n:
+                self.index = 7
+                self.order = False
+            #close the ntu tour         
+            elif event.key == pygame.K_BACKSPACE and self.order == False:
+                self.index = 7
+                print self.index
+                self.tour = False
+                  
             ## simulate person appears in another side  
             elif event.key == pygame.K_SPACE: 
-                ## text is "bug hole will opening"
-                self.index = 5
+                ## text is "your partner is coming,keep smiling"
+                self.index = 4
                 self.flag=True
-            ## restart dialog  
-            elif event.key == pygame.K_ESCAPE:
-                ##
+                self.order = False
+                self.hole = False
+                self.tour = False
+            elif event.key == pygame.K_RSHIFT and self.flag == True:
+                #text is "bug hole will open"
+                self.index = 5   
+                self.flag = False
+                self.order = False
+                self.hole = True
+            ## esc the experience  
+            elif event.key == pygame.K_ESCAPE:              
+                #text is "goodbye"
+                self.index = 6
+                self.hole = False  
+            ## restart dialog   
+            elif event.key == pygame.K_LSHIFT:
                 self.index = 0
-                self.flag=False
+                self.order = True
+                self.flag = False
+                self.hole = False
 
 
-        ##change text content
-        self.text = dialog.load(self.index)
-        ## change text font and color
-        self.dialog = self.font.render(self.text, False, (255,0,0))
-
+       
     def on_loop(self):
 
         ## camera part 
@@ -170,8 +199,14 @@ class EnterPoint:
                 ## create thread to get age
                 ageThread(self.frame,"gender")
         else:
+            ### initial variable
             self.somebody = False
             self.count = 0	
+            self.index = 0
+            self.order = True
+            self.flag = False
+            self.hole = False
+            self.tour = False
         print "count:"+str(self.count)
         ## frame color into normal mode 
         self.frame=cv2.cvtColor(self.frame,cv2.COLOR_BGR2RGB)
@@ -183,7 +218,15 @@ class EnterPoint:
         self.frame = pygame.surfarray.make_surface(self.frame)
        
     def on_render(self):
+        dialog = Dialog()
+        ##change text content
+        self.text = dialog.load(self.index)
+        ## change text font and color
+        self.dialog = self.font.render(self.text, False, (255,0,0))
         
+        white = 255,255,255
+        red = 255,0,0
+        self.dialog = textOutline(self.font, self.text, white, red)
         ## render frame on screen 
         self.screen.blit(self.frame,(0,0))
 
@@ -197,7 +240,10 @@ class EnterPoint:
                 self.screen.blit(self.dialog, (20,50))
             
             #print "render:"+str(gender)
-            
+            if self.hole == True:
+                self.screen.blit(self.partner,(100,150))
+            if self.tour == True:
+                self.screen.blit(self.map,(20,150))
 
         pygame.display.update()
         
