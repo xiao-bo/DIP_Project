@@ -16,7 +16,7 @@ import sys
 import cognitive_face as CF
 import cv2
 import json
-from hollow import textHollow,textOutline
+from font import textHollow,textOutline
 
 ## faceAPI variable 
 cascPath = "../db/haarcascade_frontalface_default.xml"        
@@ -241,7 +241,7 @@ class EnterPoint:
             
             #print "render:"+str(gender)
             if self.hole == True:
-                self.screen.blit(self.partner,(100,150))
+                self.screen.blit(self.partner,(600,370))
             if self.tour == True:
                 self.screen.blit(self.map,(20,150))
 
