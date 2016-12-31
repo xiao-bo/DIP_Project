@@ -15,23 +15,47 @@ import time
 import sys
 import cognitive_face as CF
 import cv2
+import json
+
 
 ## faceAPI variable 
 cascPath = "../db/haarcascade_frontalface_default.xml"        
 KEY = 'f36fd7a2c5a84e0ea61fa81a80aed7d8'  # Replace with a valid Subscription Key here.
 CF.Key.set(KEY)
+
+## result of FaceAPI , reason of using array is single value 
+## can't pass by thread
+## gender is same reason
 resultFaceAPI = [None] 
+## detect person gender
+gender = [None]
+
+def parseFaceAPI(data,key):
+    ## function will return key:value
+    ## avoid no detection person 
+    if None in data or not data[0]:
+        return 'no'
+    ##turn string into json fromat 
+    jsonFormat=json.dumps(data[0][0])
+    
+    ## turn json into python dicitionary 
+    dic=json.loads(jsonFormat)
+    return dic['faceAttributes'][key]
+
 
 class ageThread(object):
-    def __init__(self,frame):
-        self.interval=1
-        t=threading.Thread(target=self.run,args=[frame])
+    def __init__(self,frame,key):
+        self.interval=0.5
+        t=threading.Thread(target=self.run,args=[frame,key])
         t.daemon=True
         t.start()
-    def run(self,frame):
+    def run(self,frame,key):
         cv2.imwrite("age.jpg",frame)
         resultFaceAPI[0] = CF.face.detect("age.jpg",False,False,'age,smile,gender')
+        gender[0]=parseFaceAPI(resultFaceAPI,key)
+        print "thread: "+str(resultFaceAPI)       
 
+    
         
 class EnterPoint:
     def __init__(self):
@@ -49,6 +73,9 @@ class EnterPoint:
         self.count = 0
         self.result = None
         self.somebody = False
+
+        
+        
         
     def on_init(self):
         ## game initail process
@@ -61,10 +88,10 @@ class EnterPoint:
         
         ## load minon NPC
         ## 500,200 represent position x,y
-        npcMinion = NPC("../pic/npc_minion.jpeg",450,100)
+        npcMinion = NPC("../pic/fire.png",450,100)
         self.npcMinion,self.npcMinion_rect=npcMinion.load()
-        
-
+        npcCat = NPC("../pic/jani.png",450,100)
+        self.npcCat,self.npcCat_rect=npcCat.load()
         ## init dialog font 
         self.font = pygame.font.SysFont(None, 50)
 
@@ -135,20 +162,17 @@ class EnterPoint:
         )
  
        	#determine person age by count
-        
         if len(faces)>0:
 
             self.count = self.count + 1
             self.somebody = True
             if self.count == 1:
                 ## create thread to get age
-                ageThread(self.frame)
-                print "result  "+str(resultFaceAPI)
-
+                ageThread(self.frame,"gender")
         else:
             self.somebody = False
             self.count = 0	
-        
+        print "count:"+str(self.count)
         ## frame color into normal mode 
         self.frame=cv2.cvtColor(self.frame,cv2.COLOR_BGR2RGB)
 
@@ -164,9 +188,16 @@ class EnterPoint:
         self.screen.blit(self.frame,(0,0))
 
         ## if have person, npc and dialog appear. 
-        if self.somebody == True:
-            self.screen.blit(self.npcMinion, self.npcMinion_rect)
-            self.screen.blit(self.dialog, (20,50))
+        if self.somebody == True :
+            if gender[0]=="male":
+                self.screen.blit(self.npcMinion, self.npcMinion_rect)
+                self.screen.blit(self.dialog, (20,50))
+            elif gender[0] =='female':
+                self.screen.blit(self.npcCat, self.npcCat_rect)
+                self.screen.blit(self.dialog, (20,50))
+            
+            #print "render:"+str(gender)
+            
 
         pygame.display.update()
         
