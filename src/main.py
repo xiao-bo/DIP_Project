@@ -5,25 +5,34 @@
 import pygame
 
 import numpy as np
-from threading import Thread
+import threading 
 ## import our class in src
 from npc import NPC
 from dialog import Dialog
-from ageDetection import getAge
+#from ageDetection import ageThread
 
-
+import time
 import sys
 import cognitive_face as CF
 import cv2
 
- 
+## faceAPI variable 
 cascPath = "../db/haarcascade_frontalface_default.xml"        
 KEY = 'f36fd7a2c5a84e0ea61fa81a80aed7d8'  # Replace with a valid Subscription Key here.
 CF.Key.set(KEY)
+resultFaceAPI = [None] 
 
+class ageThread(object):
+    def __init__(self,frame):
+        self.interval=1
+        t=threading.Thread(target=self.run,args=[frame])
+        t.daemon=True
+        t.start()
+    def run(self,frame):
+        cv2.imwrite("age.jpg",frame)
+        resultFaceAPI[0] = CF.face.detect("age.jpg",False,False,'age,smile,gender')
 
-
-
+        
 class EnterPoint:
     def __init__(self):
         ### initial game's property value
@@ -112,7 +121,6 @@ class EnterPoint:
         ## camera takes frame 
         ret, self.frame = self.video_capture.read()
         
-        
         ## load face model
         faceCascade = cv2.CascadeClassifier(cascPath)
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
@@ -125,36 +133,24 @@ class EnterPoint:
             minSize=(30, 30),
             flags=cv2.CASCADE_SCALE_IMAGE
         )
-        
-        ## draw rectangle
-        
-        #for (x, y, w, h) in faces:
-        #    cv2.rectangle(self.frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        
-        ## detect person age by thread
-        #t=Thread(target=getAge(frame))
-        #t.start()
-        #result=getAge(frame)
-        #print result
-        
  
        	#determine person age by count
+        
         if len(faces)>0:
-            cv2.imwrite('frame.jpg', self.frame)
+
             self.count = self.count + 1
             self.somebody = True
             if self.count == 1:
-                img_url="frame.jpg"
-                result = CF.face.detect(img_url,False,False,'age,smile,gender')
-                print result
+                ## create thread to get age
+                ageThread(self.frame)
+                print "result  "+str(resultFaceAPI)
 
         else:
             self.somebody = False
             self.count = 0	
- 		  
+        
         ## frame color into normal mode 
         self.frame=cv2.cvtColor(self.frame,cv2.COLOR_BGR2RGB)
-
 
         ## turn frame into right angle 
         self.frame=np.rot90(self.frame)
@@ -166,27 +162,30 @@ class EnterPoint:
         
         ## render frame on screen 
         self.screen.blit(self.frame,(0,0))
+
+        ## if have person, npc and dialog appear. 
         if self.somebody == True:
-            self.bg = self.screen.blit(self.npcMinion, self.npcMinion_rect)
+            self.screen.blit(self.npcMinion, self.npcMinion_rect)
             self.screen.blit(self.dialog, (20,50))
-        else:
-            pass
+
         pygame.display.update()
         
         
-
     def on_cleanup(self):
         pygame.quit()
         cv2.destroyAllWindows()
         
- 
+
+
 if __name__ == "__main__" :
 
     Enter = EnterPoint()
     
+    ## game init variable
     if Enter.on_init() == False:
         Enter.running = False
 
+    ## game loop 
     while( Enter.running ):
         for event in pygame.event.get():
             Enter.on_event(event)
