@@ -28,6 +28,7 @@ src/npc.py - simple npc class
 src/dialog.py - simple dialog class  
 src/main.py - main of game. now can run npc class ,dialog class
 			  and faceDetection. Detect age in thread.
+			  remove pimple after bug hole open.
 
 ## git note
 Before you start coding , please type follow command:

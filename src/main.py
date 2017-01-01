@@ -17,6 +17,7 @@ import cognitive_face as CF
 import cv2
 import json
 from font import textHollow,textOutline
+from skinPimpleDetect import removePimple
 
 ## faceAPI variable 
 cascPath = "../db/haarcascade_frontalface_default.xml"        
@@ -45,7 +46,7 @@ def parseFaceAPI(data,key):
 
 class ageThread(object):
     def __init__(self,frame,key):
-        self.interval=0.5
+        self.interval=1
         t=threading.Thread(target=self.run,args=[frame,key])
         t.daemon=True
         t.start()
@@ -192,12 +193,15 @@ class EnterPoint:
  
        	#determine person age by count
         if len(faces)>0:
-
             self.count = self.count + 1
             self.somebody = True
-            if self.count == 1:
-                ## create thread to get age
-                ageThread(self.frame,"gender")
+            if self.hole==False:## hole is not open
+                if self.count == 1:
+                    ## create thread to get age
+                    ageThread(self.frame,"gender")
+            else:
+                self.frame,skin=removePimple(self.frame)
+                print "hole is open"
         else:
             ### initial variable
             self.somebody = False
