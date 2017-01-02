@@ -19,14 +19,16 @@ Project Flow-Chart
 ##usgae 
 These files can be executed individiual in src  
 src/ageDetection.py - return age of humans at image.  
-src/faceDetection.py - detect humans face in camera. 
+src/faceDetection.py - detect humans face in camera and can debug for background. 
+src/skinPimpleDetect.py - can detect pimple and remove it.  
 
 These class file can be call by main.py.(npc.py and dialog.py) 
 I hope build good model for main.py.  
 src/npc.py - simple npc class  
 src/dialog.py - simple dialog class  
-src/main.py - main of game. now can run npc class and dialog class
-
+src/main.py - main of game. now can run npc class ,dialog class
+			  and faceDetection. Detect age in thread.
+			  remove pimple after bug hole open.
 
 ## git note
 Before you start coding , please type follow command:

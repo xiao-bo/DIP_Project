@@ -1,11 +1,13 @@
 import cv2
 import sys
 
+##demo debug for background
+
 cascPath = "../db/haarcascade_frontalface_default.xml"        
 faceCascade = cv2.CascadeClassifier(cascPath)
 video_capture = cv2.VideoCapture(0)#
-#video_capture.set(3,840)
-#video_capture.set(4,480)
+video_capture.set(3,840)
+video_capture.set(4,480)
 def loop():
     while True:
         # Capture frame-by-frame
@@ -28,15 +30,17 @@ def loop():
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
             roi=frame[x:x+w,y:y+h]
             
-            cv2.imwrite("a.jpg",roi)
-        img=cv2.imread("a.jpg")
-        #cv2.rectangle(frame, (100, 100), (200, 500), (0, 255, 0), 2)
+            
+        if len(faces)>0:
+            print "have person"
+        else:
+            print "no person"
         
         # Display the resulting frame
-        cv2.imshow('Video', img)
-        #cv2.imshow('Video', frame)
-        #if cv2.waitKey(1) & 0xFF == ord('q'):
-        #    break
+        cv2.imshow('Video', frame)
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
 def clean():
     # When everything is done, release the capture

@@ -5,25 +5,59 @@
 import pygame
 
 import numpy as np
-from threading import Thread
+import threading 
 ## import our class in src
 from npc import NPC
 from dialog import Dialog
-from ageDetection import getAge
+#from ageDetection import ageThread
 
-
+import time
 import sys
 import cognitive_face as CF
 import cv2
+import json
+from font import textHollow,textOutline
+from skinPimpleDetect import removePimple
 
- 
+## faceAPI variable 
 cascPath = "../db/haarcascade_frontalface_default.xml"        
 KEY = 'f36fd7a2c5a84e0ea61fa81a80aed7d8'  # Replace with a valid Subscription Key here.
 CF.Key.set(KEY)
 
+## result of FaceAPI , reason of using array is single value 
+## can't pass by thread
+## gender is same reason
+resultFaceAPI = [None] 
+## detect person gender
+gender = [None]
+
+def parseFaceAPI(data,key):
+    ## function will return key:value
+    ## avoid no detection person 
+    if None in data or not data[0]:
+        return 'no'
+    ##turn string into json fromat 
+    jsonFormat=json.dumps(data[0][0])
+    
+    ## turn json into python dicitionary 
+    dic=json.loads(jsonFormat)
+    return dic['faceAttributes'][key]
 
 
+class ageThread(object):
+    def __init__(self,frame,key):
+        self.interval=1
+        t=threading.Thread(target=self.run,args=[frame,key])
+        t.daemon=True
+        t.start()
+    def run(self,frame,key):
+        cv2.imwrite("age.jpg",frame)
+        resultFaceAPI[0] = CF.face.detect("age.jpg",False,False,'age,smile,gender')
+        gender[0]=parseFaceAPI(resultFaceAPI,key)
+        print "thread: "+str(resultFaceAPI)       
 
+    
+        
 class EnterPoint:
     def __init__(self):
         ### initial game's property value
@@ -35,11 +69,18 @@ class EnterPoint:
 
         ## dialog index
         self.index = 0
+        self.order = True
+        self.flag = False
 
         #detect face by passing person
         self.count = 0
         self.result = None
         self.somebody = False
+
+        #map and partner
+        self.tour = False
+        self.hole = False
+        
         
     def on_init(self):
         ## game initail process
@@ -50,12 +91,15 @@ class EnterPoint:
         pygame.display.set_caption("WindowTitle")
 
         
-        ## load minon NPC
+        ## load male and female NPC
         ## 500,200 represent position x,y
-        npcMinion = NPC("../pic/npc_minion.jpeg",450,100)
+        npcMinion = NPC("../pic/fire.png",650,30)
         self.npcMinion,self.npcMinion_rect=npcMinion.load()
-        
-
+        npcCat = NPC("../pic/jani.png",600,30)
+        self.npcCat,self.npcCat_rect=npcCat.load()
+        ## load map and partner
+        self.partner =pygame.image.load("../pic/partner.png")
+        self.map =pygame.image.load("../pic/map.png")
         ## init dialog font 
         self.font = pygame.font.SysFont(None, 50)
 
@@ -64,14 +108,16 @@ class EnterPoint:
         #camera windows size
         
         self.video_capture.set(3,840)
-        self.video_capture.set(4,480)
+        self.video_capture.set(4,600)
         
         
 
     def on_event(self, event):
-        dialog = Dialog()
-        self.text = dialog.load(self.index)
+        if event.type == pygame.QUIT:
+            self.running = False
 
+        ## dialog part     
+        ## detect keydown 
         if event.type == pygame.QUIT:
             self.running = False
 
@@ -79,39 +125,58 @@ class EnterPoint:
         ## detect keydown 
         elif event.type == pygame.KEYDOWN:
             ## if key is right
-            if event.key == pygame.K_RIGHT: 
+            if event.key == pygame.K_RIGHT and self.order == True: 
                 ## change dialog
-                self.index = (self.index+1)%5 
-            elif event.key == pygame.K_LEFT:
-                self.index = (self.index-1)%5
-
-            ## simulate person is leaving state.    
-            elif event.key == pygame.K_BACKSPACE: 
-                ## text is "goodbye"
-                self.index = 6  
+                self.index = (self.index+1)%3
+            elif event.key == pygame.K_LEFT and self.order == True:
+                self.index = (self.index-1)%3
+            #open the ntu tour     
+            elif event.key == pygame.K_y:
+                self.index = 3
+                self.order = False
+                self.tour = True
+            elif event.key == pygame.K_n:
+                self.index = 7
+                self.order = False
+            #close the ntu tour         
+            elif event.key == pygame.K_BACKSPACE and self.order == False:
+                self.index = 7
+                print self.index
+                self.tour = False
+                  
             ## simulate person appears in another side  
             elif event.key == pygame.K_SPACE: 
-                ## text is "bug hole will opening"
-                self.index = 5
+                ## text is "your partner is coming,keep smiling"
+                self.index = 4
                 self.flag=True
-            ## restart dialog  
-            elif event.key == pygame.K_ESCAPE:
-                ##
+                self.order = False
+                self.hole = False
+                self.tour = False
+            elif event.key == pygame.K_RSHIFT and self.flag == True:
+                #text is "bug hole will open"
+                self.index = 5   
+                self.flag = False
+                self.order = False
+                self.hole = True
+            ## esc the experience  
+            elif event.key == pygame.K_ESCAPE:              
+                #text is "goodbye"
+                self.index = 6
+                self.hole = False  
+            ## restart dialog   
+            elif event.key == pygame.K_LSHIFT:
                 self.index = 0
-                self.flag=False
+                self.order = True
+                self.flag = False
+                self.hole = False
 
 
-        ##change text content
-        self.text = dialog.load(self.index)
-        ## change text font and color
-        self.dialog = self.font.render(self.text, False, (255,0,0))
-
+       
     def on_loop(self):
 
         ## camera part 
         ## camera takes frame 
         ret, self.frame = self.video_capture.read()
-        
         
         ## load face model
         faceCascade = cv2.CascadeClassifier(cascPath)
@@ -125,36 +190,30 @@ class EnterPoint:
             minSize=(30, 30),
             flags=cv2.CASCADE_SCALE_IMAGE
         )
-        
-        ## draw rectangle
-        
-        #for (x, y, w, h) in faces:
-        #    cv2.rectangle(self.frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        
-        ## detect person age by thread
-        #t=Thread(target=getAge(frame))
-        #t.start()
-        #result=getAge(frame)
-        #print result
-        
  
        	#determine person age by count
         if len(faces)>0:
-            cv2.imwrite('frame.jpg', self.frame)
             self.count = self.count + 1
             self.somebody = True
-            if self.count == 1:
-                img_url="frame.jpg"
-                result = CF.face.detect(img_url,False,False,'age,smile,gender')
-                print result
-
+            if self.hole==False:## hole is not open
+                if self.count == 1:
+                    ## create thread to get age
+                    ageThread(self.frame,"gender")
+            else:
+                self.frame,skin=removePimple(self.frame)
+                print "hole is open"
         else:
+            ### initial variable
             self.somebody = False
             self.count = 0	
- 		  
+            self.index = 0
+            self.order = True
+            self.flag = False
+            self.hole = False
+            self.tour = False
+        print "count:"+str(self.count)
         ## frame color into normal mode 
         self.frame=cv2.cvtColor(self.frame,cv2.COLOR_BGR2RGB)
-
 
         ## turn frame into right angle 
         self.frame=np.rot90(self.frame)
@@ -163,30 +222,51 @@ class EnterPoint:
         self.frame = pygame.surfarray.make_surface(self.frame)
        
     def on_render(self):
+        dialog = Dialog()
+        ##change text content
+        self.text = dialog.load(self.index)
+        ## change text font and color
+        self.dialog = self.font.render(self.text, False, (255,0,0))
         
+        white = 255,255,255
+        red = 255,0,0
+        self.dialog = textOutline(self.font, self.text, white, red)
         ## render frame on screen 
         self.screen.blit(self.frame,(0,0))
-        if self.somebody == True:
-            self.bg = self.screen.blit(self.npcMinion, self.npcMinion_rect)
-            self.screen.blit(self.dialog, (20,50))
-        else:
-            pass
+
+        ## if have person, npc and dialog appear. 
+        if self.somebody == True :
+            if gender[0]=="male":
+                self.screen.blit(self.npcMinion, self.npcMinion_rect)
+                self.screen.blit(self.dialog, (20,50))
+            elif gender[0] =='female':
+                self.screen.blit(self.npcCat, self.npcCat_rect)
+                self.screen.blit(self.dialog, (20,50))
+            
+            #print "render:"+str(gender)
+            if self.hole == True:
+                self.screen.blit(self.partner,(600,370))
+            if self.tour == True:
+                self.screen.blit(self.map,(20,150))
+
         pygame.display.update()
         
         
-
     def on_cleanup(self):
         pygame.quit()
         cv2.destroyAllWindows()
         
- 
+
+
 if __name__ == "__main__" :
 
     Enter = EnterPoint()
     
+    ## game init variable
     if Enter.on_init() == False:
         Enter.running = False
 
+    ## game loop 
     while( Enter.running ):
         for event in pygame.event.get():
             Enter.on_event(event)
