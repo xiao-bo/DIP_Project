@@ -30,8 +30,9 @@ CF.Key.set(KEY)
 resultFaceAPI = [None] 
 ## detect person gender
 gender = [None]
+age = [None]
 
-def parseFaceAPI(data,key):
+def parseFaceAPI(data,gender,age):
     ## function will return key:value
     ## avoid no detection person 
     if None in data or not data[0]:
@@ -41,22 +42,25 @@ def parseFaceAPI(data,key):
     
     ## turn json into python dicitionary 
     dic=json.loads(jsonFormat)
-    return dic['faceAttributes'][key]
+    return dic['faceAttributes'][gender],dic['faceAttributes'][age]
 
 
 class ageThread(object):
-    def __init__(self,frame,key):
+    def __init__(self,frame,gender_v,age_v):
         self.interval=1
-        t=threading.Thread(target=self.run,args=[frame,key])
+        t=threading.Thread(target=self.run,args=[frame,gender_v,age_v])
         t.daemon=True
         t.start()
-    def run(self,frame,key):
+    def run(self,frame,gender_v,age_v):
         cv2.imwrite("age.jpg",frame)
         resultFaceAPI[0] = CF.face.detect("age.jpg",False,False,'age,smile,gender')
-        gender[0]=parseFaceAPI(resultFaceAPI,key)
+        
+        a,b=parseFaceAPI(resultFaceAPI,gender_v,age_v)
+        print "a:"+str(a)+" b:"+str(b)
+        gender[0]=a
+        age[0]=b
         print "thread: "+str(resultFaceAPI)       
-
-    
+   
         
 class EnterPoint:
     def __init__(self):
@@ -103,7 +107,9 @@ class EnterPoint:
         self.npcCat,self.npcCat_rect=npcCat.load()
 
         ## old NPC
-        npcOld = NPC("../pic/old.jpg",600,30)
+
+        npcOld = NPC("../pic/old.png",600,30)
+        self.npcOld,self.npcOld_rect=npcOld.load()
 
 
         ## load map and partner
@@ -206,7 +212,8 @@ class EnterPoint:
             if self.hole==False:## hole is not open
                 if self.count == 1:
                     ## create thread to get age
-                    ageThread(self.frame,"gender")
+                    ageThread(self.frame,"gender","age")
+    
             else:
                 self.frame,skin=removePimple(self.frame)
                 print "hole is open"
@@ -219,7 +226,9 @@ class EnterPoint:
             self.flag = False
             self.hole = False
             self.tour = False
-        print "count:"+str(self.count)
+
+        ## debug
+        #print "count:"+str(self.count)
         ## frame color into normal mode 
         self.frame=cv2.cvtColor(self.frame,cv2.COLOR_BGR2RGB)
 
@@ -251,14 +260,18 @@ class EnterPoint:
 
         ## if have person, npc and dialog appear. 
         if self.somebody == True :
-            if gender[0]=="male":
-                self.screen.blit(self.npcFire, self.npcFire_rect)
+            if age[0] < 30.0:
+                if gender[0]=="male":
+                    self.screen.blit(self.npcFire, self.npcFire_rect)          
+                    self.screen.blit(self.dialog, (20,40))
+                elif gender[0] =='female':
+                    self.screen.blit(self.npcCat, self.npcCat_rect)
+                    self.screen.blit(self.dialog, (20,40))
+               
+            elif age[0] > 30.0:
+                self.screen.blit(self.npcOld, self.npcOld_rect)
                 self.screen.blit(self.dialog, (20,40))
-            elif gender[0] =='female':
-                self.screen.blit(self.npcCat, self.npcCat_rect)
-                self.screen.blit(self.dialog, (20,40))
-            
-            #print "render:"+str(gender)
+
             if self.flag == True:
                 self.screen.blit(self.dialog2, (20,85))
             if self.hole == True:

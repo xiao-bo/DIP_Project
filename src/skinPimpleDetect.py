@@ -15,12 +15,12 @@ video_capture = cv2.VideoCapture(0)
 lower = np.array([0,30,60], dtype = "uint8")
 upper = np.array([30,150,255], dtype = "uint8")
 
-#--------------Here is new--------------#
+
 def adjust_gamma(image, gamma=1.0):
     invGamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
     return cv2.LUT(image, table)
-#--------------Here is new--------------#
+
 
 def removePimple(frame):
     
@@ -30,17 +30,21 @@ def removePimple(frame):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
     skinMask = cv2.erode(skinMask, kernel, iterations = 2)
     skinMask = cv2.dilate(skinMask, kernel, iterations = 2)
-    #skinMask = cv2.GaussianBlur(skinMask, (3, 3), 0)
+    skinMask = cv2.GaussianBlur(skinMask, (3, 3), 0)
     skin = cv2.bitwise_and(frame, frame, mask = skinMask)
-    mask2 = np.zeros((skinMask.shape[0],skinMask.shape[1]))
-    #print(mask2.shape)
+
+    #prepare mask smaller than origin mask
+    #smaller mask will eat edge of blur.
+    skinMask2 = cv2.erode(skinMask, kernel, iterations = 1) ## new
     #print(skinMask.shape)
-    skin2 = cv2.blur(skin, (5, 5))
+    skin2 = cv2.blur(skin, (3, 3))
+    skin2 = cv2.bitwise_and(skin2, skin2, mask = skinMask2) ## new
+
     frame2 = np.maximum(frame, skin2)
-    #--------------Here is new--------------#
+    
     gamma = 1.5
     frame4 = adjust_gamma(frame2, gamma=gamma)
-    #--------------Here is new--------------#
+    
     return frame4,skin
 
 
