@@ -14,6 +14,12 @@ lower = np.array([0,30,60], dtype = "uint8")
 upper = np.array([30,150,255], dtype = "uint8")
 
 
+def adjust_gamma(image, gamma=1.0):
+    invGamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    return cv2.LUT(image, table)
+
+
 def removePimple(frame):
     
     
@@ -29,7 +35,11 @@ def removePimple(frame):
     #print(skinMask.shape)
     skin2 = cv2.blur(skin, (5, 5))
     frame2 = np.maximum(frame, skin2)
-    return frame2,skin
+
+    gamma = 1.5
+    frame4 = adjust_gamma(frame2, gamma=gamma)
+
+    return frame4,skin
 
 
 if __name__=="__main__":
@@ -52,7 +62,9 @@ if __name__=="__main__":
         for (x, y, w, h) in faces:
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
         # Display the resulting frame
-        
+        skin=cv2.equalizeHist(frame2)
+        print skin.shape
+        print frame.shape
         cv2.imshow('Video', np.hstack([frame, frame2, skin]))
         #cv2.imshow('image', skinMask)
         
