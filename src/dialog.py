@@ -6,11 +6,13 @@ dialogContent=[
 "Your smile is good ",\
 "Do you want to experience NTU Tour? (y/n) ",\
 "Play off NTU Tour (delete)",\
-"Your partner is coming,keep smiling ",\
-"Bug hole will open",\
+"Your partner is coming",\
+"I want ti leave bug hole (Esc)",\
 "Goodbye",\
-"Find your partner by smiling"
-]##index from 0 to 7
+"Find your partner by smiling",\
+"keep smiling, then bug hole will open"
+
+]##index from 0 to 8
 
 class Dialog:
 	def __init__(self):

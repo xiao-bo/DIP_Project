@@ -69,6 +69,7 @@ class EnterPoint:
 
         ## dialog index
         self.index = 0
+        self.index2 = 0
         self.order = True
         self.flag = False
 
@@ -113,8 +114,6 @@ class EnterPoint:
         
 
     def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self.running = False
 
         ## dialog part     
         ## detect keydown 
@@ -146,8 +145,9 @@ class EnterPoint:
                   
             ## simulate person appears in another side  
             elif event.key == pygame.K_SPACE: 
-                ## text is "your partner is coming,keep smiling"
+                ## text is "your partner is coming.keep smiling,then bug hole will open"
                 self.index = 4
+                self.index2 = 8
                 self.flag=True
                 self.order = False
                 self.hole = False
@@ -222,15 +222,22 @@ class EnterPoint:
         self.frame = pygame.surfarray.make_surface(self.frame)
        
     def on_render(self):
+        white = 255,255,255
+        red = 255,0,0
+
         dialog = Dialog()
         ##change text content
         self.text = dialog.load(self.index)
-        ## change text font and color
+        self.text2 = dialog.load(self.index2)
+
+        ## change text font 
         self.dialog = self.font.render(self.text, False, (255,0,0))
-        
-        white = 255,255,255
-        red = 255,0,0
+        self.dialog2 = self.font.render(self.text2, False, (255,0,0))
+
+        ## change text color
         self.dialog = textOutline(self.font, self.text, white, red)
+        self.dialog2 = textOutline(self.font, self.text2, white, red)
+        
         ## render frame on screen 
         self.screen.blit(self.frame,(0,0))
 
@@ -238,12 +245,14 @@ class EnterPoint:
         if self.somebody == True :
             if gender[0]=="male":
                 self.screen.blit(self.npcMinion, self.npcMinion_rect)
-                self.screen.blit(self.dialog, (20,50))
+                self.screen.blit(self.dialog, (20,40))
             elif gender[0] =='female':
                 self.screen.blit(self.npcCat, self.npcCat_rect)
-                self.screen.blit(self.dialog, (20,50))
+                self.screen.blit(self.dialog, (20,40))
             
             #print "render:"+str(gender)
+            if self.flag == True:
+                self.screen.blit(self.dialog2, (20,85))
             if self.hole == True:
                 self.screen.blit(self.partner,(600,370))
             if self.tour == True:
