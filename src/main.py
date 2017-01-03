@@ -92,12 +92,20 @@ class EnterPoint:
         pygame.display.set_caption("WindowTitle")
 
         
-        ## load male and female NPC
+        ## load male ,female and old NPC
         ## 500,200 represent position x,y
-        npcMinion = NPC("../pic/fire.png",650,30)
-        self.npcMinion,self.npcMinion_rect=npcMinion.load()
+        ## male NPC
+        npcFire = NPC("../pic/fire.png",650,30)
+        self.npcFire,self.npcFire_rect=npcFire.load()
+
+        ## female NPC
         npcCat = NPC("../pic/jani.png",600,30)
         self.npcCat,self.npcCat_rect=npcCat.load()
+
+        ## old NPC
+        npcOld = NPC("../pic/old.jpg",600,30)
+
+
         ## load map and partner
         self.partner =pygame.image.load("../pic/partner.png")
         self.map =pygame.image.load("../pic/map.png")
@@ -244,7 +252,7 @@ class EnterPoint:
         ## if have person, npc and dialog appear. 
         if self.somebody == True :
             if gender[0]=="male":
-                self.screen.blit(self.npcMinion, self.npcMinion_rect)
+                self.screen.blit(self.npcFire, self.npcFire_rect)
                 self.screen.blit(self.dialog, (20,40))
             elif gender[0] =='female':
                 self.screen.blit(self.npcCat, self.npcCat_rect)
