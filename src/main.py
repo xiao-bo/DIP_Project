@@ -6,16 +6,15 @@ import pygame
 
 import numpy as np
 import threading 
-## import our class in src
-from npc import NPC
-from dialog import Dialog
-#from ageDetection import ageThread
-
 import time
 import sys
 import cognitive_face as CF
 import cv2
 import json
+
+## import our class in src
+from npc import NPC
+from dialog import Dialog
 from font import textHollow,textOutline
 from skinPimpleDetect import removePimple
 
@@ -77,6 +76,7 @@ class EnterPoint:
         self.order = True
         self.flag = False
         self.bye = True
+        self.yn = False
 
         #detect face by passing person
         self.count = 0
@@ -142,18 +142,21 @@ class EnterPoint:
             if event.key == pygame.K_RIGHT and self.order == True: 
                 ## change dialog
                 self.index = (self.index+1)%3
-            elif event.key == pygame.K_LEFT and self.order == True:
-                self.index = (self.index-1)%3
+                if self.index == 2:
+                    self.yn=True
+            
             #open the ntu tour     
-            elif event.key == pygame.K_y:
+            elif event.key == pygame.K_UP and self.yn == True:
                 self.index = 3
                 self.order = False
                 self.tour = True
-            elif event.key == pygame.K_n:
+                self.yn = False
+            elif event.key == pygame.K_DOWN and self.yn == True:
                 self.index = 7
                 self.order = False
+                self.yn = False
             #close the ntu tour         
-            elif event.key == pygame.K_DELETE and self.order == False:
+            elif event.key == pygame.K_BACKSPACE and self.order == False:
                 self.index = 7
                 print self.index
                 self.tour = False
@@ -208,7 +211,7 @@ class EnterPoint:
             flags=cv2.CASCADE_SCALE_IMAGE
         )
  
-       	#determine person age by count
+        #determine person age by count
         if len(faces)>0:
             self.count = self.count + 1
             self.somebody = True
@@ -223,7 +226,7 @@ class EnterPoint:
         else:
             ### initial variable
             self.somebody = False
-            self.count = 0	
+            self.count = 0  
             self.index = 0
             self.order = True
             self.flag = False
