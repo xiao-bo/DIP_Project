@@ -33,14 +33,22 @@ def removePimple(frame):
     skinMask = cv2.GaussianBlur(skinMask, (3, 3), 0)
     skin = cv2.bitwise_and(frame, frame, mask = skinMask)
 
-    #prepare mask smaller than origin mask
-    #smaller mask will eat edge of blur.
-    skinMask2 = cv2.erode(skinMask, kernel, iterations = 1) ## new
-    #print(skinMask.shape)
-    skin2 = cv2.blur(skin, (3, 3))
-    skin2 = cv2.bitwise_and(skin2, skin2, mask = skinMask2) ## new
+    #use a smaller size of mask to erase the edge of blur
+    skinMask2 = cv2.erode(skinMask, kernel, iterations = 2) #add this line
+    skin2 = cv2.blur(skin, (5, 5))
+    skin2 = cv2.bitwise_and(skin2, skin2, mask = skinMask2) #add this line
 
     frame2 = np.maximum(frame, skin2)
+    maskGF = cv2.cvtColor(skin2 ,cv2.COLOR_BGR2GRAY)
+    corners = cv2.goodFeaturesToTrack(maskGF, 5, 0.03, 0, mask = maskGF,useHarrisDetector=1, k=0.04)
+    #print(type(corners))
+    if corners is not None:
+        for i in corners:
+            x,y = i.ravel()
+            if x>5 and x<frame2.shape[0]-5 and y>5 and y<frame2.shape[1]-5:
+                temp = frame2[x-5:x+5,y-5:y+5].copy()
+                temp2 = cv2.blur(temp, (9, 9))
+                frame2[x-5:x+5, y-5:y+5]=temp2
     
     gamma = 1.5
     frame4 = adjust_gamma(frame2, gamma=gamma)
