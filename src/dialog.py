@@ -7,7 +7,7 @@ dialogContent=[
 "Do you want to experience NTU Tour? (y/n) ",\
 "Play off NTU Tour (delete)",\
 "Your partner is coming",\
-"I want ti leave bug hole (Esc)",\
+"I want to leave bug hole (Esc)",\
 "Goodbye",\
 "Find your partner by smiling",\
 "keep smiling, then bug hole will open"
