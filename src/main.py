@@ -76,6 +76,7 @@ class EnterPoint:
         self.index2 = 0
         self.order = True
         self.flag = False
+        self.bye = True
 
         #detect face by passing person
         self.count = 0
@@ -176,16 +177,18 @@ class EnterPoint:
             elif event.key == pygame.K_ESCAPE:              
                 #text is "goodbye"
                 self.index = 6
-                self.hole = False  
+                self.hole = False
+                self.order = False  
+                self.bye = False
             ## restart dialog   
             elif event.key == pygame.K_LSHIFT:
                 self.index = 0
                 self.order = True
                 self.flag = False
                 self.hole = False
+                self.bye = True
 
-
-       
+   
     def on_loop(self):
 
         ## camera part 
@@ -272,7 +275,7 @@ class EnterPoint:
                 self.screen.blit(self.npcOld, self.npcOld_rect)
                 self.screen.blit(self.dialog, (20,40))
 
-            if self.flag == True:
+            if self.flag == True and self.bye == True:
                 self.screen.blit(self.dialog2, (20,85))
             if self.hole == True:
                 self.screen.blit(self.partner,(600,370))
