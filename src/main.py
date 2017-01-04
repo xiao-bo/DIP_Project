@@ -52,7 +52,7 @@ class ageThread(object):
         t.start()
     def run(self,frame,gender_v,age_v):
         cv2.imwrite("age.jpg",frame)
-        resultFaceAPI[0] = CF.face.detect("age.jpg",False,False,'age,smile,gender')
+        resultFaceAPI[0] = CF.face.detect("age.jpg",False,False,'age,gender')
         
         a,b=parseFaceAPI(resultFaceAPI,gender_v,age_v)
         print "a:"+str(a)+" b:"+str(b)
@@ -265,7 +265,9 @@ class EnterPoint:
         self.screen.blit(self.frame,(0,0))
 
         ## if have person, npc and dialog appear. 
-        if self.somebody == True :
+        print age[0]
+        if self.somebody == True and age[0]!='o':
+
             if age[0] < 30.0:
                 if gender[0]=="male":
                     self.screen.blit(self.npcFire, self.npcFire_rect)          
