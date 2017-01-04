@@ -153,7 +153,7 @@ class EnterPoint:
                 self.index = 7
                 self.order = False
             #close the ntu tour         
-            elif event.key == pygame.K_BACKSPACE and self.order == False:
+            elif event.key == pygame.K_DELETE and self.order == False:
                 self.index = 7
                 print self.index
                 self.tour = False
@@ -306,4 +306,3 @@ if __name__ == "__main__" :
         Enter.on_loop()
         Enter.on_render()
     Enter.on_cleanup()
-
